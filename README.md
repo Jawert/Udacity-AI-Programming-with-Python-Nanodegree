@@ -20,3 +20,6 @@ Mostly geared towards brushing up on Python programming skills, this project tau
 
 For the second project I utilized all of the skills that I learned in the program to create a neural network from scratch that could identify flower species.
 The code for both projects can be found in this repository.
+
+## Completion and Certification Date
+I successfully completed this project and was awarded a certificate of completion on July 1st, 2020.

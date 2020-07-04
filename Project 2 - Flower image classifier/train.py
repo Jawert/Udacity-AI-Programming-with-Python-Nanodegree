@@ -1,9 +1,12 @@
 '''
 @Author: Jacob Wert
 @Title: Image Classifier Training File
+For Udacity's AI Programming with Python Nanodegree
 '''
+#########################################################
+### Import all of the necessary packages and modules. ###
+#########################################################
 
-# Import all of the necessary packages and modules.
 import json
 import torch
 from torch import nn, optim
@@ -13,7 +16,11 @@ from torchvision import datasets, transforms, models, utils
 import matplotlib.pyplot as plt
 from collections import OrderedDict
 import argparse
-  
+
+###################################################
+### Read in the arguments defined by the users. ###
+###################################################
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--arch', type = str, default = 'vgg16', help = 'Specify the pre-trained model architecture to use. By default this model uses VGG16')
@@ -24,7 +31,7 @@ parser.add_argument('--epochs', type = int, default = 5, help='Specify the numbe
 parser.add_argument('--dropout', type = float, default = 0.5, help='Specify probability rate for dropouts. Default is 50% (0.5).')
 parser.add_argument('--save_dir', type = str, default = './checkpoint.pth', help = 'Specify the save directory for a checkpoint of the model. Default is ./checkpoint.pth')
 
-# Maps the parser arguments to variables for easier access later
+# Maps the parser arguments to variables for easier access later.
 p_inputs = parser.parse_args()
 
 architecture = p_inputs.arch
@@ -35,14 +42,20 @@ epochs = p_inputs.epochs
 dropout = p_inputs.dropout
 save_dir = p_inputs.save_dir
 
-# Pull in data
+##############################################################
+### Pull in data from the given folders in the nanodegree. ###
+##############################################################
+
 data_dir = 'flowers'
 train_dir = data_dir + '/train'
 valid_dir = data_dir + '/valid'
 test_dir = data_dir + '/test'
 
-# Define transformations for the training dataset.
+############################################################################################
+### Create the transformations for the images, define the datasets, and the dataloaders. ###
+############################################################################################
 
+# Define transformations for the training dataset.
 data_transforms = {
     "training": transforms.Compose([transforms.RandomHorizontalFlip(),
                                     transforms.RandomRotation(20),
@@ -64,29 +77,43 @@ data_transforms = {
                                                         [0.229, 0.224, 0.225])])
 }
 
-# DONE: Load the datasets with ImageFolder
+# Transform the data from each image set based on the data transforms listed above.
 image_datasets = {
     "training": datasets.ImageFolder(train_dir, transform = data_transforms["training"]),
     "validation": datasets.ImageFolder(valid_dir, transform = data_transforms["validation"]),
     "testing": datasets.ImageFolder(test_dir, transform = data_transforms["testing"])
 }
-# DONE: Using the image datasets and the trainforms, define the dataloaders
+
+# Set the batch size for how many images to pull based on the dataset that was selected.
 dataloaders = {
     "training": torch.utils.data.DataLoader(image_datasets["training"], batch_size = 64, shuffle = True),
     "validation": torch.utils.data.DataLoader(image_datasets["validation"], batch_size = 32),
     "testing": torch.utils.data.DataLoader(image_datasets["testing"], batch_size = 20)
 }
 
-# Make sure that the user is only using a supported model.
+###############################################################################################################
+### Create the image classifier and select the pretrained model basesd on the user inputted specifications. ###
+### Make sure that the user is only using a supported model.                                                ###
+###############################################################################################################
+
+# If the user did not select one of the supported models, let them know and then exit the program.
 if not p_inputs.arch.startswith("vgg16") and not p_inputs.arch.startswith("densenet121") and not p_inputs.arch.startswith("alexnet"):
     print("This image classifier only supports VGG16, DenseNet121, and Alexnet. Please one of these models and try again.")
     exit(1)
-
 else:
     print(f"You have selected the {p_inputs.arch} network.")
 
-# Defining the model based on inputs
+#######################################################################
+### Defining the new model based on the selected pre-trained model. ###
+#######################################################################
+
 def Classifier(architechture = 'vgg16', dropout = 0.5, hidden_layers = 1024):
+'''
+This function sets up the classifier based on the selected pre-trained model that the user selected.
+@architecture: The user can select one of three pre-trained models; VGG16, DenseNet121, or Alexnet. Default is VGG16.
+@dropout: The chance that an image is left out in training the model. Default is 50%.
+@hidden_layers: The number of hidden layers in the model. Default is 1024.
+'''
     if architecture == 'vgg16':
         model = models.vgg16(pretrained = True)
         input_size = 25088
@@ -97,9 +124,11 @@ def Classifier(architechture = 'vgg16', dropout = 0.5, hidden_layers = 1024):
         model = models.alexnet(pretrained = True)
         input_size = 9216
 
+# Freeze the parameters for the model that we do not want to change.
     for param in model.parameters():
         param.requires_grad = False
-    
+
+# Apply the proper adjustments to the model, including linear transformations, ReLU standardizations, and ending with a Softmax output.
     classifier = nn.Sequential(OrderedDict([
             ('dropout', nn.Dropout(dropout)),
             ('fc1', nn.Linear(input_size, hidden_layers)),
@@ -130,6 +159,7 @@ def train_model(model = model, criterion = criterion, optimizer = optimizer, epo
     @epochs: The number of epochs (training cycles) as specified by the user.
     @gpu: Whether or not to train on the GPU.
     '''
+    # Set the steps (rounds to loop through) to 0. Set how often to print a message during training (print_every).
     steps = 0
     print_every = 30
     
@@ -205,6 +235,10 @@ def train_model(model = model, criterion = criterion, optimizer = optimizer, epo
 train_model(model, criterion, optimizer, epochs, gpu)
 
 def test_checker(gpu = gpu):
+'''
+This function checks to see how how accurate our model was, based off of the guesses and actual labels of the images.
+@gpu: Allows the user to set if they want to use the GPU for calculations or not.
+'''
     num_correct = 0
     total = 0
     
